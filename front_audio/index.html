@@ -41,14 +41,13 @@
     analyser.connect(audioContext.destination);
 
 
-    console.log(analyser.frequencyBinCount + '====')
 
     // 存储频谱数据，Uint8Array数组创建的时候必须指定长度，长度就从analyser.frequencyBinCount里面获取，长度是1024
     var arrData = new Uint8Array(analyser.frequencyBinCount),
-      count = Math.min(500, arrData.length), //能量柱个数,不能大于数组长度1024,没意义
+      count = Math.min(300, arrData.length), //能量柱个数,不能大于数组长度1024,没意义
 
       //计算步长，每隔多少取一个数据用于绘画，意抽取片段数据来反映整体频谱规律，乘以0.6是因为，我测试发现数组长度600以后的数据基本都是0了，画出来能量柱高度就是0了，为了效果好一点，所以只取前60%，如果为了真实可以不乘以0.6
-      step = Math.round(arrData.length * 0.5 / count),
+      step = Math.round(arrData.length * 0.6 / count),
       value = 0, //每个能量柱的值
       drawX = 0, //能量柱X轴位置
       drawY = 0, //能量柱Y轴坐标
@@ -56,7 +55,7 @@
       width = canvas.width = window.innerWidth,//canvas宽度
       //能量柱宽度，设置线条宽度
       lineWidth = context.lineWidth = canvas.width / count;
-
+    console.log( arrData.length + '====' + count)
 
       //渲染函数
     function render() {
@@ -64,10 +63,12 @@
       //每次要清除画布
       context.clearRect(0, 0, width, height);
 
-
       //获取频谱值
       analyser.getByteFrequencyData(arrData);
-      for (var i = 0; i < count; i++) {
+
+//      console.log(arrData)
+
+        for (var i = 0; i < count; i++) {
 
       	//前面已经计算好步长了
         value = arrData[i * step + step];
