@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
+  
+
+
+  <script>
+
+    var webgl, vertexShaderObject, fragmentShaderObject
+    var programObject = null
+    var triangleBuffer = null
+    var v3PositionIndex = 0
+
+    function init() {
+      var canvas = document.getElementById('canvas')
+      webgl = canvas.getContext('webgl')
+      console.log('2222')
+      // 设置webgl区域
+      webgl.viewport(0, 0, canvas.clientWidth/2, canvas.clientHeight/2)
+
+      // 创建shader
+      vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+      fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+      // 指定shader源
+      webgl.shaderSource(vertexShaderObject, getShaderSource('shader-vs'))
+      webgl.shaderSource(fragmentShaderObject, getShaderSource('shader-fs'))
+
+      // 编译shader, 生成显卡可以执行的汇编代码
+      webgl.compileShader(vertexShaderObject)
+      webgl.compileShader(fragmentShaderObject)
+
+      if (!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: vertexShaderObject')
+        return
+      }
+      if (!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: fragmentShaderObject')
+        return
+      }
+
+      // 创建可执行程序
+      programObject = webgl.createProgram()
+      
+      // 可执行程序添加shader
+      webgl.attachShader(programObject, vertexShaderObject)
+      webgl.attachShader(programObject, fragmentShaderObject)
+
+      // 给shader的输入attribute赋值
+      webgl.bindAttribLocation(programObject, v3PositionIndex, "v3Position")
+
+      // 链接可执行程序
+      webgl.linkProgram(programObject)
+
+      if (webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+        alert('error: programObject')
+        return
+      }
+
+      // 使用可执行程序
+      webgl.useProgram(programObject)
+
+      // 定义顶点, 传入到显卡中才能生效
+      var jsArrayData = [
+        0.0, 1.0, 0.0, // 上顶点
+        -1.0, -1.0, 0.0, // 左顶点
+        1.0, -1.0, 0.0 // 右顶点
+      ]
+      // 在显卡上创建缓冲区
+      triangleBuffer = webgl.createBuffer()
+
+      // 指定缓冲区对象的类型为ARRAY_BUFFER
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      
+      // 给缓冲区赋值  STATIC_DRAW表示静态数据
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
+
+      // webgl用指定颜色清空
+      webgl.clearColor(0, 0, 0, 1.0)
+      // 设置颜色
+      webgl.clear(webgl.COLOR_BUFFER_BIT)
+
+      // 使用缓冲区
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      
+      // 声明给v3PositionIndex赋值
+      webgl.enableVertexAttribArray(v3PositionIndex)
+
+      // 给v3PositionIndex赋值
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 0, 0)
+
+      // 绘制，从第0个数据开始, 绘制3个
+      webgl.drawArrays(webgl.TRIANGLES, 0, 3)
+    }
+
+    function getShaderSource(scriptID) {
+      var shaderScript = document.getElementById(scriptID)
+      if (!shaderScript) {
+        return
+      }
+      var sourceCode = ""
+      var child = shaderScript.firstChild;
+      while (child) {
+        if (child.nodeType == child.TEXT_NODE) {
+          sourceCode += child.textContent
+          child = child.nextSibling
+        }
+      }
+      
+      return sourceCode
+    }
+  </script>
+  
+  <script id="shader-vs">
+    // vertex shader 顶点shader
+    attribute vec3 v3Position; // 输入
+    void main(void) {
+        gl_Position = vec4(v3Position, 1.0);
+    }
+  </script>
+
+  <script id="shader-fs">
+    // fragment shader 片元shader
+    void main(void) {
+        gl_FragColor = vec4(.0, 1.0, 1.0, 1.0);
+    }
+  </script>
+
+</body>
+</html>

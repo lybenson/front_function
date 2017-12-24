@@ -12,11 +12,11 @@
 			context = canvas.getContext('2d'),
 			FONT_HEIGHT = 15,
 			MARGIN = 35,
-			HAND_TRUNCATION = canvas.width / 25,
+            HAND_TRUNCATION = canvas.width / 25,
 			HOUR_HAND_TRUNCATION = canvas.width / 10,
 			NUMERAL_SPACING = 20,
-			RADIUS = canvas.width / 2 - MARGIN,
-			HAND_RADIUS = RADIUS + NUMERAL_SPACING;
+			RADIUS = canvas.width / 2 - MARGIN, // 半径
+			HAND_RADIUS = RADIUS + NUMERAL_SPACING; // 绘制的文本到圆心的距离
 
 		// 画圆方法
 		function drawCircle() {
@@ -50,8 +50,8 @@
                 // measureText() 方法返回包含一个对象，该对象包含以像素计的指定字体宽度
 				numberalWidth = context.measureText(numberal).width;
 
-				// context.fillText(text,x,y,maxWidth); 方法在画布上绘制填色的文本。文本的默认颜色是黑色
                 /**
+				 * context.fillText(text,x,y,maxWidth); 方法在画布上绘制填色的文本。文本的默认颜色是黑色
 				 * text: 绘制的文本。
 				 * x: 开始绘制文本的 x 坐标位置
 				 * y: 开始绘制文本的 y 坐标位置
