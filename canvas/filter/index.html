@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+  
+  <script>
+
+
+    /*
+      drawImage(image, dx, dy)
+      drawImage(image, dx, dy, dw, dh)
+      drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) sx, sy 表示图像偏移值, dx, dy表示canvas上绘制起始坐标
+
+      getImageData()的返回值
+    */
+
+    var canvas = document.getElementById("canvas")
+    var ctx = canvas.getContext('2d')
+    var image = new Image()
+    image.src = 'timg.jpeg'
+
+    image.onload = function (e) {
+      ctx.drawImage(image, 0, 0, canvas.clientWidth, canvas.clientHeight)
+      drawInBlackAndWhite()
+      // emboss()
+      // negative()
+    }
+
+    // 黑白滤镜
+    function drawInBlackAndWhite() {
+      var imageData = ctx.getImageData(0, 0, canvas.clientWidth, canvas.clientHeight)
+      console.log(Object.prototype.toString.call(imageData))
+      var data = imageData.data
+      
+      var average = 0
+      for (let i = 0; i <= data.length - 4; i+=4) {
+        average = (data[i] + data[i + 1] + data[i + 2]) / 3
+        data[i] = average
+        data[i + 1] = average
+        data[i + 2] = average
+      }
+      ctx.putImageData(imageData, 0, 0)
+    }
+
+    // 负片滤镜
+    function negative() {
+      var imageData = ctx.getImageData(0, 0, canvas.clientWidth, canvas.clientHeight)
+      var data = imageData.data
+
+      for (let i = 0; i <= data.length - 4; i+=4) {
+        data[i] = 255 - data[i]
+        data[i + 1] = 255 - data[i + 1]
+        data[i + 2] = 255 - data[i + 2]
+        // data[i + 3] = 255
+      }
+      ctx.putImageData(imageData, 0, 0)
+    }
+
+    // 浮雕滤镜
+    function emboss() {
+      var imageData = ctx.getImageData(0, 0, canvas.clientWidth, canvas.clientHeight)
+      var data = imageData.data
+      var width = imageData.width
+      var length = data.length
+      for (let i = 0; i < length; i++) { // 循环每一个像素
+        if (i <= length - width * 4) { // 没有超过数组长度
+          if ((i + 1) % 4 !== 0) { // 不是alpha值
+            if ((i + 4) % (width * 4) == 0) {
+              data[i] = data[i - 4]
+              data[i + 1] = data[i - 3]
+              data[i + 2] = data[i - 2]
+              data[i + 3] = data[i - 1]
+              i+=4
+            } else {
+              data[i] = 255 / 2 + 2 * data[i] - data[i + 4] + data[i + width * 4]
+            }
+          }
+        } else {
+          if ((i + 1) % 4 !== 0) {
+            data[i] = data[i - width * 4]
+          }
+        }
+      }
+      ctx.putImageData(imageData, 0, 0) 
+    }
+  </script>
+</body>
+</html>
