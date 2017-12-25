@@ -27,9 +27,22 @@
       vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
       fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
 
+      // 顶点着色器
+      var VSHADER_SOURCE = "" +
+        "attribute vec3 v3Position;" +
+        "void main() {" +
+        "gl_Position = vec4(v3Position, 1.0);" + 
+        "}";
+
+      // 片元着色器
+      var FSHADER_SOURCE = "" + 
+        "void main() {" + 
+        "gl_FragColor = vec4(.0, 1.0, 1.0, 1.0);" + 
+        "}";
+
       // 指定shader源
-      webgl.shaderSource(vertexShaderObject, getShaderSource('shader-vs'))
-      webgl.shaderSource(fragmentShaderObject, getShaderSource('shader-fs'))
+      webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
+      webgl.shaderSource(fragmentShaderObject, FSHADER_SOURCE)
 
       // 编译shader, 生成显卡可以执行的汇编代码
       webgl.compileShader(vertexShaderObject)
@@ -57,7 +70,7 @@
       // 链接可执行程序
       webgl.linkProgram(programObject)
 
-      if (webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+      if (!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
         alert('error: programObject')
         return
       }
@@ -98,38 +111,8 @@
       webgl.drawArrays(webgl.TRIANGLES, 0, 3)
     }
 
-    function getShaderSource(scriptID) {
-      var shaderScript = document.getElementById(scriptID)
-      if (!shaderScript) {
-        return
-      }
-      var sourceCode = ""
-      var child = shaderScript.firstChild;
-      while (child) {
-        if (child.nodeType == child.TEXT_NODE) {
-          sourceCode += child.textContent
-          child = child.nextSibling
-        }
-      }
-      
-      return sourceCode
-    }
+    init()
   </script>
   
-  <script id="shader-vs">
-    // vertex shader 顶点shader
-    attribute vec3 v3Position; // 输入
-    void main(void) {
-        gl_Position = vec4(v3Position, 1.0);
-    }
-  </script>
-
-  <script id="shader-fs">
-    // fragment shader 片元shader
-    void main(void) {
-        gl_FragColor = vec4(.0, 1.0, 1.0, 1.0);
-    }
-  </script>
-
 </body>
 </html>
