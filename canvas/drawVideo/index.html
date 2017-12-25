@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style> 
+      body {
+         background: #dddddd;
+      }
+
+      .floatingControls {
+         position: absolute;
+         left: 175px;
+         top: 290px;
+      }
+
+      #canvas {
+         background: #ffffff;
+         border: thin solid #aaaaaa;
+         margin: 10px;
+      }
+   </style>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="600" style="border: 1px solid red;"></canvas>
+
+  <video id="video" src="demo.m4v" controls></video>
+
+  <div id='controls' class='floatingControls'>
+      <input id='controlButton' type='button' value='Play'/>
+      <input id='colorCheckbox' type='checkbox' checked> <span style='font-size:1.15em'>Color</span>
+      <input id='flipCheckbox' type='checkbox'> <span style='font-size:1.15em'>Flip</span>
+   </div>
+  <script>
+
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var video = document.getElementById('video');
+
+    // 控制是否播放
+    var controlButton = document.getElementById('controlButton');
+
+    // 控制是否翻转
+    var flipCheckbox = document.getElementById('flipCheckbox');
+
+    // 控制是否显示颜色
+    var colorCheckbox = document.getElementById('colorCheckbox');
+    var imageData;
+
+
+    // 创建离屏canvas
+    var offscreenCanvas = document.createElement('canvas');
+    var offscreenContext = offscreenCanvas.getContext('2d');
+    var poster = new Image();
+
+    // 移除颜色
+    function removeColor() {
+      var data,
+        width,
+        average;
+
+      imageData = offscreenContext.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+      data = imageData.data;
+      width = data.width;
+
+      for (let i = 0; i < data.length - 4; i += 4) {
+        // average = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        // data[i]   = average;
+        // data[i + 1] = average;
+        // data[i + 2] = average;
+        data[i]   = 255 - data[i];
+        data[i + 1] = 255 - data[i + 1];
+        data[i + 2] = 255 - data[i + 2];
+      }
+
+      offscreenContext.putImageData(imageData, 0, 0);
+    }
+
+    // 翻转
+    function drawFlipped() {
+      context.save();
+
+      context.translate(canvas.width/2, canvas.height/2);
+      context.rotate(Math.PI);
+      context.translate(-canvas.width/2, -canvas.height/2);
+      context.drawImage(offscreenCanvas, 0, 0);
+
+      context.restore();
+    }
+
+    // 视频下一帧
+    function nextVideoFrame() {
+      if (video.ended) {
+        controlButton.value = 'Play';
+      }
+      else {
+        offscreenContext.drawImage(video, 0, 0);
+
+        if (!colorCheckbox.checked) {
+          removeColor();
+        }
+          
+        if (flipCheckbox.checked) {
+          drawFlipped();
+        } else {
+          context.drawImage(offscreenCanvas, 0, 0);
+        }
+        
+        requestAnimationFrame(nextVideoFrame);
+      }
+    }
+
+    // 开始播放
+    function startPlaying() {
+      requestAnimationFrame(nextVideoFrame);
+      video.play();
+    }
+
+    // 停止播放
+    function stopPlaying() {
+      video.pause();
+    }
+
+    // 
+    controlButton.onclick = function(e) {
+      if (controlButton.value === 'Play') {
+        startPlaying();
+        controlButton.value = 'Pause';
+      } else {
+        stopPlaying();
+        controlButton.value = 'Play';
+      }
+    }
+
+    poster.onload = function() { 
+      context.drawImage(poster, 0, 0);
+    }
+
+    offscreenCanvas.width = canvas.width;
+    offscreenCanvas.height = canvas.height;
+
+  </script>
+</body>
