@@ -11,17 +11,26 @@
 
   <script>
 
+
     var webgl, vertexShaderObject, fragmentShaderObject
     var programObject = null
     var triangleBuffer = null
     var v3PositionIndex = 0
 
+    /**
+     *  1.创建canvas
+     *  2.创建webgl上下文
+     *  3.创建shader并编译链接，形成一个可在显卡中的可执行程序
+     *  4.创建顶点缓冲区，把要绘制的数据传递到显卡中
+     *  5.使用缓冲区bindBuffer
+     *  6.指定顶点数据并绘制
+     */
     function init() {
       var canvas = document.getElementById('canvas')
       webgl = canvas.getContext('webgl')
-      console.log('2222')
+
       // 设置webgl区域
-      webgl.viewport(0, 0, canvas.clientWidth/2, canvas.clientHeight/2)
+      webgl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
 
       // 创建shader
       vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
@@ -84,7 +93,7 @@
         -1.0, -1.0, 0.0, // 左顶点
         1.0, -1.0, 0.0 // 右顶点
       ]
-      // 在显卡上创建缓冲区
+      // 在显卡上创建缓冲区, 显卡中没有分配空间
       triangleBuffer = webgl.createBuffer()
 
       // 指定缓冲区对象的类型为ARRAY_BUFFER
@@ -109,6 +118,7 @@
 
       // 绘制，从第0个数据开始, 绘制3个
       webgl.drawArrays(webgl.TRIANGLES, 0, 3)
+      
     }
 
     init()
