@@ -73,7 +73,7 @@
       webgl.attachShader(programObject, vertexShaderObject)
       webgl.attachShader(programObject, fragmentShaderObject)
 
-      // 给shader的输入attribute赋值
+      // 将shader中的变量 v3Position 和 v3PositionIndex 绑定
       webgl.bindAttribLocation(programObject, v3PositionIndex, "v3Position")
 
       // 链接可执行程序
@@ -88,6 +88,7 @@
       webgl.useProgram(programObject)
 
       // 定义顶点, 传入到显卡中才能生效
+      // webgl坐标原点位于canvas中心点，z轴垂直于屏幕 向里为正
       var jsArrayData = [
         0.0, 1.0, 0.0, // 上顶点
         -1.0, -1.0, 0.0, // 左顶点
@@ -99,7 +100,10 @@
       // 指定缓冲区对象的类型为ARRAY_BUFFER
       webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
       
-      // 给缓冲区赋值  STATIC_DRAW表示静态数据
+      // 给缓冲区赋值  
+      // js中浮点默认为双精度, 转换为单精度Float32Array或者半精度Float16Array
+      // SREEAM_DRAW / STATIC_DRAW / DYNAMIC_DRAW 
+      // 数据偶尔变化 / 动态数据 / 静态数据 (主要是为了性能优化)
       webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
 
       // webgl用指定颜色清空
@@ -107,16 +111,17 @@
       // 设置颜色
       webgl.clear(webgl.COLOR_BUFFER_BIT)
 
-      // 使用缓冲区
+      // 指定绘制使用的顶点数据从使triangleBuffer缓冲区获取
       webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
       
       // 声明给v3PositionIndex赋值
       webgl.enableVertexAttribArray(v3PositionIndex)
 
-      // 给v3PositionIndex赋值
-      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 0, 0)
+      // 给v3PositionIndex赋值, 顶点坐标由三个数据组成， 从缓冲区的第0个位置开始读取数据
+      // 4 * 3表示每12个字节为一个顶点数据(一个float为4个字节)
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 3, 0)
 
-      // 绘制，从第0个数据开始, 绘制3个
+      // 绘制，从第0个点开始, 绘制3个顶点。即 顶点shader会被绘制3次
       webgl.drawArrays(webgl.TRIANGLES, 0, 3)
       
     }
