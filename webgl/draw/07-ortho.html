@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="lib/gl-matrix.js"></script>
+</head>
+<body onload="webglStart()">
+  <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
+  
+
+
+  <script>
+    /*
+    正交投影: 不会有近大远小，视觉上大小和距离没有关系
+    本质上是坐标系转换
+
+    在WebGL的坐标被限制为(1, 1, 1)和(-1, -1, - 1)之间。中心点位于canvas中心。当我们需要给点的坐标设置为像素单位时, webgl坐标系无法满足。所以需要进行坐标转换。
+    gl-matrix.js提供了转换的方法
+
+    - mat4.ortho()可将坐标系转换为正交坐标系
+    - webgl.getUniformLocation() 绑定属性和uniform
+    - webgl.uniformMatrix4fv() 为uniform赋值
+
+    —— 变换原理待深究 ——
+
+    */
+    var webgl, vertexShaderObject, fragmentShaderObject
+    var programObject = null
+    var triangleBuffer = null
+    var indexBuffer = null
+    var v3PositionIndex = 0
+    var uniformAnim = 0
+    var animTime = 0
+    var uniformProj = 0
+
+    var projectMat = mat4.create()
+
+    function webglStart() {
+      init()
+      tick()
+    }
+
+    function init() {
+      var canvas = document.getElementById('canvas')
+      webgl = canvas.getContext('webgl')
+      
+      // 正交矩阵变换 X轴从0到canvas.clientWidth, Y轴从canvas.clientHeight到0,Z轴从-1000到1000.
+      mat4.ortho(projectMat, 0, canvas.clientWidth, canvas.clientHeight, 0, -1000, 1000)
+
+      // 经过正交矩阵变换后projectMat的值为
+      // [0.0033333334140479565, 0, 0, 0, 0, -0.0033333334140479565, 0, 0, 0, 0, -0.0010000000474974513, 0, -1, 1, -0, 1]
+      console.log(projectMat)
+
+      // 设置webgl区域
+      webgl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
+
+      // 创建shader
+      vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+      fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+      // 顶点着色器
+      var VSHADER_SOURCE = "" +
+        "attribute vec3 v3Position;" +
+        "uniform float anim;" + 
+        "uniform mat4 proj;" + 
+        "void main() {" +
+        "gl_Position = proj * vec4(v3Position.x + anim, v3Position.y, v3Position.z, 1.0);" + 
+        "}";
+
+      // 片元着色器
+      var FSHADER_SOURCE = "" + 
+        "void main() {" + 
+        "gl_FragColor = vec4(.0, .0, 1.0, 1.0);" + 
+        "}";
+
+      webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
+      webgl.shaderSource(fragmentShaderObject, FSHADER_SOURCE)
+
+      webgl.compileShader(vertexShaderObject)
+      webgl.compileShader(fragmentShaderObject)
+
+      if (!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: vertexShaderObject')
+        return
+      }
+      if (!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: fragmentShaderObject')
+        return
+      }
+
+      programObject = webgl.createProgram()
+      
+      webgl.attachShader(programObject, vertexShaderObject)
+      webgl.attachShader(programObject, fragmentShaderObject)
+
+      
+      webgl.linkProgram(programObject)
+
+      if (!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+        alert('error: programObject')
+        return
+      }
+
+      // 顶点数据
+      var jsArrayData = [
+        // x  y  z  nx  ny  nz
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 100, 0.0, 0.0, 0.0, 0.0,
+        0, 100, 0.0, 0.0, 0.0, 0.0
+      ]
+      // 顶点缓冲区
+      triangleBuffer = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
+
+      // 索引数据
+      var indexData = [
+        0, 1, 2,
+        0, 2, 3
+      ]
+      // 索引缓冲区
+      indexBuffer = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+      webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), webgl.STATIC_DRAW)
+
+      uniformAnim = webgl.getUniformLocation(programObject, "anim")
+      uniformProj = webgl.getUniformLocation(programObject, "proj")
+      webgl.bindAttribLocation(programObject, v3PositionIndex, "v3Position")
+    }
+
+    function renderScene() {
+      webgl.clearColor(0, 0, 0, 1.0)
+      webgl.clear(webgl.COLOR_BUFFER_BIT)
+
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+
+      webgl.useProgram(programObject)
+
+      animTime += 1
+      webgl.uniform1f(uniformAnim, animTime)
+
+      webgl.uniformMatrix4fv(uniformProj, false, projectMat)
+
+      webgl.enableVertexAttribArray(v3PositionIndex)
+
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 6, 0)
+
+      webgl.drawElements(webgl.TRIANGLES, 6, webgl.UNSIGNED_SHORT, 0)
+
+      // webgl.useProgram(0)
+    }
+
+    function tick() {
+      renderScene()
+      requestAnimationFrame(tick)
+    }
+
+
+  </script>
+  
+</body>
+</html>
