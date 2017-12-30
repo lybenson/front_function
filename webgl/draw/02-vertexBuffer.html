@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
+  
+
+
+  <script>
+    var webgl, vertexShaderObject, fragmentShaderObject
+    var programObject = null
+    var triangleBuffer = null
+    var triangleBuffer1= null
+    var v3PositionIndex = 0
+
+    function init() {
+      var canvas = document.getElementById('canvas')
+      webgl = canvas.getContext('webgl')
+
+      // 设置webgl区域
+      webgl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
+
+      // 创建shader
+      vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+      fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+      // 顶点着色器
+      var VSHADER_SOURCE = "" +
+        "attribute vec3 v3Position;" +
+        "void main() {" +
+        "gl_Position = vec4(v3Position, 1.0);" + 
+        "}";
+
+      // 片元着色器
+      var FSHADER_SOURCE = "" + 
+        "void main() {" + 
+        "gl_FragColor = vec4(.0, 1.0, 1.0, 1.0);" + 
+        "}";
+
+      webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
+      webgl.shaderSource(fragmentShaderObject, FSHADER_SOURCE)
+
+      webgl.compileShader(vertexShaderObject)
+      webgl.compileShader(fragmentShaderObject)
+
+      if (!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: vertexShaderObject')
+        return
+      }
+      if (!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)) {
+        alert('error: fragmentShaderObject')
+        return
+      }
+
+      programObject = webgl.createProgram()
+      
+      webgl.attachShader(programObject, vertexShaderObject)
+      webgl.attachShader(programObject, fragmentShaderObject)
+
+      webgl.bindAttribLocation(programObject, v3PositionIndex, "v3Position")
+      webgl.linkProgram(programObject)
+
+      if (!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+        alert('error: programObject')
+        return
+      }
+
+      webgl.useProgram(programObject)
+
+      var jsArrayData = [
+        0.0, 1.0, 0.0,
+        -1.0, -1.0, 0.0,
+        1.0, -1.0, 0.0
+      ]
+
+      var jsArrayData1 = [
+        1.0, 1.0, 0.0,
+        -1.0, -1.0, 0.0,
+        0.0, -1.0, 0.0
+      ]
+      triangleBuffer = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
+
+
+      triangleBuffer1 = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer1)
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData1), webgl.STATIC_DRAW)
+
+      // bufferData的另一种使用方式: 
+      // 指定buffer大小
+      // webgl.bufferData(webgl.ARRAY_BUFFER, 4 * 9, webgl.STATIC_DRAW)
+      // buffer绑定数据, 偏移0个字节
+      // webgl.bufferData(webgl.ARRAY_BUFFER, 0, Float32Array(jsArrayData))
+
+      webgl.clearColor(0, 0, 0, 1.0)
+      webgl.clear(webgl.COLOR_BUFFER_BIT)
+
+      // 顶点缓冲区可切换
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer1)
+      
+      webgl.enableVertexAttribArray(v3PositionIndex)
+
+
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 3, 0)
+
+
+      webgl.drawArrays(webgl.TRIANGLES, 0, 3)
+      
+    }
+
+    init()
+  </script>
+  
+</body>
+</html>
