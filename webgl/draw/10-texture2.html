@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="lib/gl-matrix.js"></script>
+</head>
+<body onload="webglStart()">
+  <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
+  
+  <script>
+
+    var webgl, vertexShaderObject, fragmentShaderObject
+    var programObject = null
+    var triangleBuffer = null
+
+    var v3PositionIndex = 0
+    var uniformProj = 0
+    var uniformTexture = 0
+    var attrUV = 0
+    var textureHandle = null
+
+    var projectMat = mat4.create()
+
+    function webglStart() {
+      init()
+    }
+
+    // 创建纹理，指定纹理源
+    function initTexture(imageFile) {
+      textureHandle = webgl.createTexture()
+      textureHandle.image = new Image()
+      textureHandle.image.src = imageFile
+      textureHandle.image.onload = function () {
+        handleLoadedTexture(textureHandle)
+
+        // tick()方法调用绘制方法, 所以只要在onload完成后才去绘制纹理
+        tick()
+      }
+    }
+
+    function handleLoadedTexture(texture) {
+      webgl.bindTexture(webgl.TEXTURE_2D, texture)
+      
+      webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, texture.image)
+
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE)
+
+      webgl.bindTexture(webgl.TEXTURE_2D, null)
+    }
+
+    function init() {
+      var canvas = document.getElementById('canvas')
+      webgl = canvas.getContext('webgl')
+
+      mat4.ortho(projectMat, 0, canvas.clientWidth, canvas.clientHeight, 0, -1000, 1000)
+
+      // 设置webgl区域
+      webgl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
+
+      // 创建shader
+      vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+      fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+      // 顶点着色器
+      var VSHADER_SOURCE = "" +
+        "attribute vec3 v3Position;" +
+        "attribute vec2 inUV;" + 
+        "varying vec2 outUV;" + 
+        "uniform mat4 proj;" + 
+        "void main() {" +
+        "gl_Position = proj * vec4(v3Position.x, v3Position.y, v3Position.z, 1.0);" + 
+        "outUV = inUV;" + 
+        "}";
+
+      // 片元着色器
+      var FSHADER_SOURCE = "" + 
+        "precision mediump float;" + 
+        "varying vec2 outUV;" + 
+        "uniform sampler2D texture;" + 
+        "void main() {" + 
+        "gl_FragColor = texture2D(texture, outUV);" + 
+        "}";
+
+      webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
+      webgl.shaderSource(fragmentShaderObject, FSHADER_SOURCE)
+
+      webgl.compileShader(vertexShaderObject)
+      webgl.compileShader(fragmentShaderObject)
+
+      if (!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)) {
+        var err = webgl.getShaderInfoLog(vertexShaderObject)
+        alert(err)
+        return
+      }
+      if (!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)) {
+        var err = webgl.getShaderInfoLog(fragmentShaderObject)
+        alert(err)
+        return
+      }
+
+      programObject = webgl.createProgram()
+      
+      webgl.attachShader(programObject, vertexShaderObject)
+      webgl.attachShader(programObject, fragmentShaderObject)
+
+      
+      webgl.linkProgram(programObject)
+
+      if (!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+        alert('error: programObject')
+        return
+      }
+
+      v3PositionIndex = webgl.getUniformLocation(programObject, "v3Position")
+      uniformProj = webgl.getUniformLocation(programObject, "proj")
+      uniformTexture = webgl.getUniformLocation(programObject, "texture")
+      attrUV = webgl.getAttribLocation(programObject, 'inUV')
+
+      // 顶点数据
+      var jsArrayData = [
+        // x   y   z   v   h
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 0.0, 0.0, 1.0, 0.0,
+        100, 100, 0.0, 1.0, 1.0,
+
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 100, 0.0, 1.0, 1.0,
+        0.0, 100, 0.0, 0.0, 1.0
+      ]
+      // 顶点缓冲区
+      triangleBuffer = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
+
+      initTexture('images/i_narutomini.jpg')
+    }
+
+    function renderScene() {
+      webgl.clearColor(0, 0, 0, 1.0)
+      webgl.clear(webgl.COLOR_BUFFER_BIT)
+
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+
+      webgl.useProgram(programObject)
+
+
+      // 传递纹理数据
+      webgl.activeTexture(webgl.TEXTURE0)
+      webgl.bindTexture(webgl.TEXTURE_2D, textureHandle)
+      webgl.uniform1i(uniformTexture, 0)
+
+      webgl.uniformMatrix4fv(uniformProj, false, projectMat)
+
+      webgl.enableVertexAttribArray(v3PositionIndex)
+      webgl.enableVertexAttribArray(attrUV)
+
+
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 5, 0)
+      webgl.vertexAttribPointer(attrUV, 2, webgl.FLOAT, false, 4 * 5, 12)
+
+      webgl.drawArrays(webgl.TRIANGLES, 0, 6)
+    }
+
+    function tick() {
+      renderScene()
+    }
+
+
+  </script>
+  
+</body>
+</html>

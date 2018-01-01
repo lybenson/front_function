@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="lib/gl-matrix.js"></script>
+</head>
+<body onload="webglStart()">
+  <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
+  
+
+
+  <script>
+    /*
+    二维纹理
+    1. vs中接收纹理点的坐标 attribute vec2 inUV, 输入outUV到fs中
+    2. fs中定义uniform纹理对象 uniform sampler2D texture; 并通过texture2D(texture, outUV); 绘制纹理
+    3. 在初始化方法中绑定attribute和uniform所对象的变量关系
+    4. 初始化纹理信息
+      - webgl.createTexture() 创建纹理
+      - webgl.bindTexture() 绑定纹理
+      - webgl.texImage2D() 指定纹理属性
+      - webgl.texParameteri() 指定纹理坐标越界的处理情况
+
+    5. 传递纹理坐标和纹理数据
+      - 传递纹理数据
+        webgl.activeTexture(webgl.TEXTURE0)
+        webgl.bindTexture(webgl.TEXTURE_2D, textureHandle)
+        webgl.uniform1i(uniformTexture, 0)
+      - 传递纹理坐标(纹理坐标为0-1范围)
+        webgl.vertexAttribPointer()
+
+
+    纹理坐标
+    纹理元素在表示纹理的数组中的二维下标（即它在位图中的二维坐标）称为纹理坐标，一般以字母表示为（u，v），也称为实际纹理坐标。假设位图的宽、高分别为w、h
+
+    纹理包装
+    纹理UV坐标范围是0~1,原点在左上角超过范围时指定使用的算法
+
+    api详解
+    1.gl.bindTexture(target, texture); 绑定纹理
+    - target: 
+      - gl.TEXTURE_2D: 二维纹理
+      - gl.TEXTURE_CUBE_MAP: 立方体贴图纹理
+      - gl.TEXTURE_3D: 三维纹理
+      - gl.TEXTURE_2D_ARRAY: 二维数组纹理
+    - texture: 要绑定的WebGLTexture对象
+
+    2.gl.texImage2D(target, level, internalformat, width, height, border, format, type, source, offset): 指定了一个二维纹理图像. 有多种类型参数格式。具体卡mozilla文档
+    - target: 指定使用的纹理类型
+      - gl.TEXTURE_2D
+      - gl.TEXTURE_CUBE_MAP_POSITIVE_X
+      - gl.TEXTURE_CUBE_MAP_NEGATIVE_X
+      - gl.TEXTURE_CUBE_MAP_POSITIVE_X
+      - gl.TEXTURE_CUBE_MAP_NEGATIVE_Y
+      - gl.TEXTURE_CUBE_MAP_POSITIVE_Z
+      - gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+    - level: 细节等级. 级别0是基本图像级别. 每一级别大小不同
+    - internalformat: 纹理中的颜色分量
+      - gl.ALPHA: 丢弃红色，绿色和蓝色的分量，并读取alpha分量。
+      - gl.RGB: 丢弃alpha分量并读取红色，绿色和蓝色分量
+      - gl.RGBA: 从颜色缓冲区读取红色，绿色，蓝色和alpha分量。
+      - gl.LUMINANCE: 每个颜色分量是亮度分量，alpha是1.0
+      - gl.LUMINANCE_ALPHA: 每个分量都是 亮度/alpha
+      - ...
+    - width: 纹理的宽度
+    - height: 纹理的高度
+    - border: 纹理的边框的宽度， 必须为0
+    - format: 指定纹理数据格式
+    - type: 纹理数据的数据类型
+      - gl.UNSIGNED_BYTE
+      - gl.UNSIGNED_SHORT_5_6_5
+      - gl.UNSIGNED_SHORT_5_6_5
+      - gl.UNSIGNED_SHORT_4_4_4_4
+      - gl.UNSIGNED_SHORT_5_5_5_1
+      - gl.BYTE
+      - gl.UNSIGNED_SHORT
+      - gl.SHORT
+      - gl.UNSIGNED_INT
+      - gl.INT
+      - gl.HALF_FLOAT
+      - gl.FLOAT
+      - gl.UNSIGNED_INT_2_10_10_10_REV
+      - gl.UNSIGNED_INT_10F_11F_11F_REV
+      - gl.UNSIGNED_INT_5_9_9_9_REV
+      - gl.UNSIGNED_INT_24_8
+      - gl.FLOAT_32_UNSIGNED_INT_24_8_REV
+    - source: 纹理的像素来源
+      - ArrayBufferView,
+      - ImageData
+      - HTMLImageElement
+      - HTMLCanvasElement
+      - HTMLVideoElement
+      - ImageBitmap
+    - offset: 字节偏移
+
+
+    3. gl.texParameterf(GLenum target, GLenum pname, GLfloat param) / gl.texParameteri(GLenum target, GLenum pname, GLint param) : 设置纹理参数
+    - target: 绑定的目标
+      - gl.TEXTURE_2D:
+      - gl.TEXTURE_CUBE_MAP:
+      - gl.TEXTURE_3D:
+      - gl.TEXTURE_2D_ARRAY
+    - pname 和 param: 纹理参数设置 (k-v) 每一个pname对应已个param
+          pname                   desc             param
+      - gl.TEXTURE_MAG_FILTER: 纹理放大算法, gl.LINEAR/gl.NEAREST
+      - gl.TEXTURE_MIN_FILTER: 纹理缩小算法,gl.LINEAR/gl.NEAREST/gl.NEAREST_MIPMAP_NEAREST/gl.LINEAR_MIPMAP_NEAREST/gl.NEAREST_MIPMAP_LINEAR/gl.LINEAR_MIPMAP_LINEAR.
+      - gl.TEXTURE_WRAP_S: 纹理s坐标的包装功能. gl.REPEAT (default value),gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT.
+      - gl.TEXTURE_WRAP_T: 纹理t坐标的包装功能. gl.REPEAT (default value),gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT.
+
+    */
+
+
+    var webgl, vertexShaderObject, fragmentShaderObject
+    var programObject = null
+    var triangleBuffer = null
+
+    var v3PositionIndex = 0
+    var uniformProj = 0
+    var uniformTexture = 0
+    var attrUV = 0
+    var textureHandle = null
+
+    var projectMat = mat4.create()
+
+    function webglStart() {
+      init()
+    }
+
+    // 创建纹理，指定纹理源
+    function initTexture(imageFile) {
+      textureHandle = webgl.createTexture()
+      textureHandle.image = new Image()
+      textureHandle.image.src = imageFile
+      textureHandle.image.onload = function () {
+        handleLoadedTexture(textureHandle)
+
+        // tick()方法调用绘制方法, 所以只要在onload完成后才去绘制纹理
+        tick()
+      }
+    }
+
+    function handleLoadedTexture(texture) {
+      webgl.bindTexture(webgl.TEXTURE_2D, texture)
+      webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, texture.image)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE)
+
+      webgl.bindTexture(webgl.TEXTURE_2D, null)
+    }
+
+    function init() {
+      var canvas = document.getElementById('canvas')
+      webgl = canvas.getContext('webgl')
+
+      mat4.ortho(projectMat, 0, canvas.clientWidth, canvas.clientHeight, 0, -1000, 1000)
+
+      // 设置webgl区域
+      webgl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
+
+      // 创建shader
+      vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
+      fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
+
+      // 顶点着色器
+      var VSHADER_SOURCE = "" +
+        "attribute vec3 v3Position;" +
+        "attribute vec2 inUV;" + 
+        "varying vec2 outUV;" + 
+        "uniform mat4 proj;" + 
+        "void main() {" +
+        "gl_Position = proj * vec4(v3Position.x, v3Position.y, v3Position.z, 1.0);" + 
+        "outUV = inUV;" + 
+        "}";
+
+      // 片元着色器
+      var FSHADER_SOURCE = "" + 
+        "precision mediump float;" + 
+        "varying vec2 outUV;" + 
+        "uniform sampler2D texture;" + 
+        "void main() {" + 
+        "gl_FragColor = texture2D(texture, outUV);" + 
+        "}";
+
+      webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
+      webgl.shaderSource(fragmentShaderObject, FSHADER_SOURCE)
+
+      webgl.compileShader(vertexShaderObject)
+      webgl.compileShader(fragmentShaderObject)
+
+      if (!webgl.getShaderParameter(vertexShaderObject, webgl.COMPILE_STATUS)) {
+        var err = webgl.getShaderInfoLog(vertexShaderObject)
+        alert(err)
+        return
+      }
+      if (!webgl.getShaderParameter(fragmentShaderObject, webgl.COMPILE_STATUS)) {
+        var err = webgl.getShaderInfoLog(fragmentShaderObject)
+        alert(err)
+        return
+      }
+
+      programObject = webgl.createProgram()
+      
+      webgl.attachShader(programObject, vertexShaderObject)
+      webgl.attachShader(programObject, fragmentShaderObject)
+
+      
+      webgl.linkProgram(programObject)
+
+      if (!webgl.getProgramParameter(programObject, webgl.LINK_STATUS)) {
+        alert('error: programObject')
+        return
+      }
+
+      v3PositionIndex = webgl.getUniformLocation(programObject, "v3Position")
+      uniformProj = webgl.getUniformLocation(programObject, "proj")
+      uniformTexture = webgl.getUniformLocation(programObject, "texture")
+      attrUV = webgl.getAttribLocation(programObject, 'inUV')
+
+      // 顶点数据
+      var jsArrayData = [
+        // x   y   z   v   h
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 0.0, 0.0, 1.0, 0.0,
+        100, 100, 0.0, 1.0, 1.0,
+
+        0.0, 0.0, 0.0, 0.0, 0.0,
+        100, 100, 0.0, 1.0, 1.0,
+        0.0, 100, 0.0, 0.0, 1.0
+      ]
+      // 顶点缓冲区
+      triangleBuffer = webgl.createBuffer()
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+      webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
+
+      initTexture('images/i_narutomini.jpg')
+    }
+
+    function renderScene() {
+      webgl.clearColor(0, 0, 0, 1.0)
+      webgl.clear(webgl.COLOR_BUFFER_BIT)
+
+      webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
+
+      webgl.useProgram(programObject)
+
+
+      // 传递纹理数据
+      webgl.activeTexture(webgl.TEXTURE0)
+      webgl.bindTexture(webgl.TEXTURE_2D, textureHandle)
+      webgl.uniform1i(uniformTexture, 0)
+
+      webgl.uniformMatrix4fv(uniformProj, false, projectMat)
+
+      webgl.enableVertexAttribArray(v3PositionIndex)
+      webgl.enableVertexAttribArray(attrUV)
+
+
+      webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 5, 0)
+      webgl.vertexAttribPointer(attrUV, 2, webgl.FLOAT, false, 4 * 5, 12)
+
+      webgl.drawArrays(webgl.TRIANGLES, 0, 6)
+    }
+
+    function tick() {
+      renderScene()
+    }
+
+
+  </script>
+  
+</body>
+</html>
