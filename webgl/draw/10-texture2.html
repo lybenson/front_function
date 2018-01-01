@@ -9,6 +9,9 @@
   <canvas id="canvas" style="border: 1px solid red;" width="600" height="600"></canvas>
   
   <script>
+    /*
+    无缝图
+    */
 
     var webgl, vertexShaderObject, fragmentShaderObject
     var programObject = null
@@ -19,6 +22,7 @@
     var uniformTexture = 0
     var attrUV = 0
     var textureHandle = null
+    var uniformAnim = 0
 
     var projectMat = mat4.create()
 
@@ -81,8 +85,9 @@
         "precision mediump float;" + 
         "varying vec2 outUV;" + 
         "uniform sampler2D texture;" + 
+        "uniform float anim;" + 
         "void main() {" + 
-        "gl_FragColor = texture2D(texture, outUV);" + 
+        "gl_FragColor = texture2D(texture, vec2(outUV.x + anim, outUV.y + anim));" + 
         "}";
 
       webgl.shaderSource(vertexShaderObject, VSHADER_SOURCE)
@@ -119,25 +124,28 @@
       uniformProj = webgl.getUniformLocation(programObject, "proj")
       uniformTexture = webgl.getUniformLocation(programObject, "texture")
       attrUV = webgl.getAttribLocation(programObject, 'inUV')
+      uniformAnim = webgl.getAttribLocation(programObject, 'anim')
 
       // 顶点数据
       var jsArrayData = [
         // x   y   z   v   h
         0.0, 0.0, 0.0, 0.0, 0.0,
-        100, 0.0, 0.0, 1.0, 0.0,
-        100, 100, 0.0, 1.0, 1.0,
+        400, 0.0, 0.0, 1.0, 0.0,
+        400, 400, 0.0, 1.0, 1.0,
 
         0.0, 0.0, 0.0, 0.0, 0.0,
-        100, 100, 0.0, 1.0, 1.0,
-        0.0, 100, 0.0, 0.0, 1.0
+        400, 400, 0.0, 1.0, 1.0,
+        0.0, 400, 0.0, 0.0, 1.0
       ]
       // 顶点缓冲区
       triangleBuffer = webgl.createBuffer()
       webgl.bindBuffer(webgl.ARRAY_BUFFER, triangleBuffer)
       webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
 
-      initTexture('images/i_narutomini.jpg')
+      initTexture('images/ffs.jpeg')
     }
+
+    var animStep = 0
 
     function renderScene() {
       webgl.clearColor(0, 0, 0, 1.0)
@@ -153,6 +161,9 @@
       webgl.bindTexture(webgl.TEXTURE_2D, textureHandle)
       webgl.uniform1i(uniformTexture, 0)
 
+      webgl.uniform1i(uniformTexture, animStep)
+      animStep += 0.1
+
       webgl.uniformMatrix4fv(uniformProj, false, projectMat)
 
       webgl.enableVertexAttribArray(v3PositionIndex)
@@ -167,6 +178,7 @@
 
     function tick() {
       renderScene()
+      requestAnimationFrame(tick)
     }
 
 
