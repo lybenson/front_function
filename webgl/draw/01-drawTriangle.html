@@ -38,14 +38,14 @@
       vertexShaderObject = webgl.createShader(webgl.VERTEX_SHADER);
       fragmentShaderObject = webgl.createShader(webgl.FRAGMENT_SHADER);
 
-      // 顶点着色器
+      // 顶点着色器-描述顶点的位置
       var VSHADER_SOURCE = "" +
         "attribute vec3 v3Position;" +
         "void main() {" +
         "gl_Position = vec4(v3Position, 1.0);" + 
         "}";
 
-      // 片元着色器
+      // 片元着色器-对网格表明像素的处理
       var FSHADER_SOURCE = "" + 
         "void main() {" + 
         "gl_FragColor = vec4(.0, 1.0, 1.0, 1.0);" + 
