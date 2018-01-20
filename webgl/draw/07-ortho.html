@@ -46,7 +46,9 @@
       webgl = canvas.getContext('webgl')
       
       // 正交矩阵变换 X轴从0到canvas.clientWidth, Y轴从canvas.clientHeight到0,Z轴从-1000到1000. 这样使得坐标原点位于左上角, X轴正方向向右,Y轴正方向向下
+      // mat4.ortho 用来将一个单位矩阵转为正交矩阵, 在shader中位置乘以这个正交矩阵即可实现坐标转换
       mat4.ortho(projectMat, 0, canvas.clientWidth, canvas.clientHeight, 0, -1000, 1000)
+      // mat4.translate(projectMat, projectMat, vec3.fromValues(1, 2, 4));
 
       // 经过正交矩阵变换后projectMat的值为
       // [0.0033333334140479565, 0, 0, 0, 0, -0.0033333334140479565, 0, 0, 0, 0, -0.0010000000474974513, 0, -1, 1, -0, 1]
