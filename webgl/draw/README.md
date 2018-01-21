@@ -20,3 +20,6 @@
 
 参考链接：
 [WebGL 技术储备指南](http://blog.csdn.net/happyduoduo1/article/details/51810137)
+
+
+给shader传递数据的方式

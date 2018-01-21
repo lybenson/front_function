@@ -144,6 +144,7 @@
       animTime += 1
       webgl.uniform1f(uniformAnim, animTime)
 
+      // 将矩阵数据传递给顶点着色器(为uniform赋值，类型为mat4类型)
       webgl.uniformMatrix4fv(uniformProj, false, projectMat)
 
       webgl.enableVertexAttribArray(v3PositionIndex)
