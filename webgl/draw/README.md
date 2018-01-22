@@ -21,5 +21,11 @@
 参考链接：
 [WebGL 技术储备指南](http://blog.csdn.net/happyduoduo1/article/details/51810137)
 
+顶点坐标传入着色器:
+1. 创建缓冲区对象
+2. 将缓冲区对象绑定到target上
+3. 将顶点数据写入缓冲区对象
+4. 将缓冲区对象分配给对应的attribute变量
+5. 开启attribute变量
 
 给shader传递数据的方式
