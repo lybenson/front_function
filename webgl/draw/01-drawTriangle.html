@@ -128,7 +128,7 @@
       // false 表示不规格化, 不是0-1之间
       webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 3, 0)
 
-      // 绘制，从第0个点开始, 绘制3个顶点。即 顶点shader会被绘制3次
+      // 绘制，从第0个点开始, 绘制3个顶点。即 顶点shader会被调用3次
       webgl.drawArrays(webgl.TRIANGLES, 0, 3)
       
     }
