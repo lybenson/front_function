@@ -129,6 +129,7 @@
       webgl.vertexAttribPointer(v3PositionIndex, 3, webgl.FLOAT, false, 4 * 3, 0)
 
       // 绘制，从第0个点开始, 绘制3个顶点。即 顶点shader会被调用3次
+      // POINTS LINE_STRIP LINE_LOOP LINES TRIANGLE_STRIP TRIANGLE_FAN TRIANGLES
       webgl.drawArrays(webgl.TRIANGLES, 0, 3)
       
     }

@@ -127,30 +127,7 @@
       init()
     }
 
-    // 创建纹理，指定纹理源
-    function initTexture(imageFile) {
-      textureHandle = webgl.createTexture()
-      textureHandle.image = new Image()
-      textureHandle.image.src = imageFile
-      textureHandle.image.onload = function () {
-        handleLoadedTexture(textureHandle)
-
-        // tick()方法调用绘制方法, 所以只要在onload完成后才去绘制纹理
-        tick()
-      }
-    }
-
-    function handleLoadedTexture(texture) {
-      webgl.bindTexture(webgl.TEXTURE_2D, texture)
-      webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, texture.image)
-      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST)
-      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST)
-      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE)
-      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE)
-
-      webgl.bindTexture(webgl.TEXTURE_2D, null)
-    }
-
+ 
     function init() {
       var canvas = document.getElementById('canvas')
       webgl = canvas.getContext('webgl')
@@ -219,7 +196,7 @@
       uniformTexture = webgl.getUniformLocation(programObject, "texture")
       attrUV = webgl.getAttribLocation(programObject, 'inUV')
 
-      // 顶点数据
+      // 顶点数据, v和h表示纹理坐标
       var jsArrayData = [
         // x   y   z   v   h
         0.0, 0.0, 0.0, 0.0, 0.0,
@@ -236,6 +213,30 @@
       webgl.bufferData(webgl.ARRAY_BUFFER, new Float32Array(jsArrayData), webgl.STATIC_DRAW)
 
       initTexture('images/i_narutomini.jpg')
+    }
+
+    // 创建纹理，指定纹理源
+    function initTexture(imageFile) {
+      textureHandle = webgl.createTexture()
+      textureHandle.image = new Image()
+      textureHandle.image.src = imageFile
+      textureHandle.image.onload = function () {
+        handleLoadedTexture(textureHandle)
+
+        // tick()方法调用绘制方法, 所以只要在onload完成后才去绘制纹理
+        tick()
+      }
+    }
+
+    function handleLoadedTexture(texture) {
+      webgl.bindTexture(webgl.TEXTURE_2D, texture)
+      webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, texture.image)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE)
+      webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE)
+
+      webgl.bindTexture(webgl.TEXTURE_2D, null)
     }
 
     function renderScene() {
