@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+
+    // 主线程的代码, 通过postMessage和onmessage和子线程交互
+    var worker = new Worker('worker.js')
+
+    // 发送消息
+    worker.postMessage('hello')
+
+    // 接收消息
+    worker.onmessage = function (e) {
+      console.log(e.data)
+    }
+
+    // 错误处理 
+    worder.onerror = function(e) {
+      console.log("error at " + e.filename + ":" + e.lineno + e.message)
+    }
+
+    // 结束worker
+    worker.terminate()
+
+
+    // 共享线程是为了避免线程的重复创建和销毁过程，降低了系统性能的消耗，共享线程SharedWorker可以同时有多个页面的线程链接。
+    var sharedworker = new SharedWorker("sharedworker.js")
+    sharedworker.port.onmessage = function(e){
+    }
+    worker.port.postMessage("message");
+  </script>
+</body>
+</html>
