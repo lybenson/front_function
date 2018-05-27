@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>WebAssembly 示例</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+
+    <pre>
+      将test.c 文件编译成index.js执行如下命令
+      emcc dice-roll.c -s WASM=1 -O3 -o index.js
+    
+      需要预先安装emscripten: https://kripken.github.io/emscripten-site/index.html
+    </pre>
+
+    <div id="d" style="background: #8d8d8d; height: 40px; line-height: 40px;text-align: center;">调用C函数,生成随机数</div>
+
+    <script>
+      document.getElementById('d').addEventListener('click', function(e) {
+        // 通过在函数名前添加下划线来调用C函数
+        const result = _roll_dice()
+        this.innerHTML = '调用了C函数,随机数为:' + result
+      })
+    </script>
+
+    <!-- 编译test.c 文件 -->
+
+    <!-- test.c 会被 Emscripten 编译器编译为index.js文件-->
+    <script src="index.js"></script>
+  </body>
+</html> 

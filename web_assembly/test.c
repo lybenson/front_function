@@ -11,5 +11,5 @@ int main(int argc, char ** argv) {
 // 返回1-6之间的一随机数
 int EMSCRIPTEN_KEEPALIVE roll_dice() {
     srand ( time(NULL) );
-    return rand() % 6 + 1;
+    return rand() % 100000 + 1;
 }
