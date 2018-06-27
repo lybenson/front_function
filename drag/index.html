@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+  #dragsource {
+    width: 200px;
+    height: 200px;
+    background-color: red;
+  }
+  #dragtarget {
+    width: 200px;
+    height: 200px;
+    padding: 20px;
+    background-color: green;
+  }
+  #dragTransfer .item{
+    margin-top: 5px;
+    background-color: blue;
+    width: 100px;
+    display: inline-block;
+    height: 100px;
+    padding: 10px;
+  }
+
+  </style>
+</head>
+<body>
+  <div id="dragsource" draggable="true">
+  </div>
+
+  <div id="dragTransfer">
+    <span class="item"></span>
+    <span class="item"></span>
+    <span class="item"></span>
+    <span class="item"></span>
+    <span class="item"></span>
+    <span class="item"></span>
+    <span class="item"></span>
+  </div>
+
+  <div id="dragtarget"></div>
+
+  <script>
+  let source = document.getElementById("dragsource")
+  let target = document.getElementById('dragtarget')
+
+  // 源元素开始拖拽
+  source.addEventListener('dragstart', function (e) {
+    e.dataTransfer.setData('source', e.target.id)
+  })
+
+  let transfer = document.getElementById('dragTransfer')
+
+  transfer.addEventListener('dragenter', function (e) {
+    e.preventDefault()
+  })
+
+  transfer.addEventListener('dragover', function (e) {
+    e.preventDefault()
+  })
+  transfer.addEventListener('drop', function (e) {
+    e.preventDefault()
+    let source = e.dataTransfer.getData('source')
+    let sourceEle = document.getElementById(source)
+    sourceEle.style.width = '100%'
+    sourceEle.style.height = '100%'
+    e.target.appendChild(sourceEle)
+  })
+
+  target.addEventListener('dragenter', function (e) {
+    e.preventDefault()
+  })
+
+  target.addEventListener('dragover', function (e) {
+    e.preventDefault()
+  })
+
+  target.addEventListener('drop', function (e) {
+    e.preventDefault()
+    let source = e.dataTransfer.getData('source')
+    let sourceEle = document.getElementById(source)
+    e.target.appendChild(sourceEle)
+  })
+
+  // 拖拽相关事件
+  /**
+   * dragstart: 开始拖放(源元素)
+   * drag: 拖放中(源元素)
+   * dragenter: 源元素开始进入目标元素的范围内
+   * dragover: 源元素在目标元素的范围内移动
+   * dragleave: 源元素离开目标元素的范围
+   * drop: 源元素放到目标元素
+   * dragend: 源元素拖放结束
+   */
+
+  // DataTransfer 对象
+  /**
+   * dropEffect: 拖放操作的视觉效果 none | copy | link | move
+   * effectAllowed: 元素被拖放时所允许的视觉效果 none | copy | copyLink | copyMove | link | linkMove | all | uninitialize
+   * files: 被拖拽文件的 FileList
+   * types: 存入数据的MIME类型
+   * void setData(DOMString format, DOMString data): 向DataTransfer对象存入数据
+   * DOMString getData(DOMString data): 读取DataTransfer对象中的数据
+   * void clearData(DOMString format): 清除DataTransfer对象中的数据
+   * void setDragImage(Element image, long x, long y): 用img元素来设置拖放图标
+   */
+
+  </script>
+</body>
+</html>
