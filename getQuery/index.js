@@ -54,20 +54,28 @@
 // }
 // console.log(getParamName('num'))  // "jawil"
 
+// http://www.domain.com/?user=anonymous&id=123&id=456&city=%E5%8C%97%E4%BA%AC&d&enabled
+// {
+//   user: 'anonymous',
+//   id: [123, 456],     // 重复出现的 key 要组装成数组，能被转成数字的就转成数字类型
+//   city: '北京',        // 中文
+//   enabled: true,      // 未指定值的 key 约定值为 true
+// }
 
-function para () {
-  let search = '?num=100&n=http://www.baidu.com' || window.location.search
 
-  search = search.substr(1)
+function para (search) {
+  if (typeof search !== 'string') return {}
+
+  let search = search.substr(1)
 
   let ret = {}
 
   // a: 匹配的子串
   // b, c: 第n个括号匹配的字符串
-  search.replace(/(\w+)=([^&]+)/ig, function (a, b, c) {
+  search.replace(/(\w+)(=([^&]*))*/ig, function (a, b, c) {
     ret[b] = unescape(c);
   })
   console.log(ret)
 }
-
+let search = '?num=100&n=http://www.baidu.com' || window.location.search
 para()
