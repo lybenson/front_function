@@ -19,7 +19,12 @@
 // String.prototype.render = function(obj) {
 //   return this.replace(/\$\{(\w+|\w+\.\w+)\}/g, match => {
 //     var keys = match.replace('${', '').replace('}', '').split('.')
-//     return keys.reduce((acc, cv) => acc[cv], obj)
+//     return keys.reduce((acc, cv, index) => {
+//       console.log(index)
+//       console.log(cv)
+//       console.log(acc)
+//       return acc[cv]
+//     }, obj)
 //   })
 // }
 
