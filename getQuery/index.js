@@ -66,6 +66,10 @@
 function para (search) {
   if (typeof search !== 'string') return {}
 
+  // substr 从1开始
+  // substr(start, length) 第一个参数表示从第几位开始截取，第二个参数表示截取多少位字符串
+  // substring(start, stop) 第一个参数表示从第几位开始截取，第二个参数表示截取到第几位
+
   let search = search.substr(1)
 
   let ret = {}
