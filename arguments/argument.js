@@ -1,4 +1,5 @@
 function opt () {
+  console.log(arguments.toString())
   console.log(Object.prototype.toString.call(arguments))
   console.log(arguments)
   console.log(arguments[0])
