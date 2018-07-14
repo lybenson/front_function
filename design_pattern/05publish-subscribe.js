@@ -1,3 +1,7 @@
+// 发布-订阅模式
+// 又叫观察者模式，定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖它的对象都将得到通知
+
+
 /* 订阅者接口 */
 function Watcher(name) {
   this.name = name
@@ -49,4 +53,6 @@ dep.attach(watch2)
 
 // 发布者发布消息
 dep.notifyObservers()
+
+
 
