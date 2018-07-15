@@ -72,23 +72,53 @@ class Compile {
 CompileUtil = {
   // 获取data值，对象的属性 a.b.c
   getVmValue (vm, expr) {
-    exprs = expr.split('.')
+    let exprs = expr.split('.')
     return exprs.reduce((prev, next) => {
       return prev[next]
     }, vm.$data)
   },
+
+  // 文本节点处理
   text (node, vm, expr) {
     let updateFun = this.update['textUpdate']
 
     // replace多参数, 第一个参数表示匹配的整体，arg2表示第一个子表达式(正则表达式括号内的匹配内容)，arg3表示第二个子表达式...倒数第二个参数表示匹配的位置，最后一个参数是 stringObject 本身
     let value = expr.replace(/\{\{([^}]+)\}\}/g, (...arguments) => {
+      // 添加观察者, 数据变化时 调用watch的cb
+      // new Watcher(vm, expr, (newValue, oldValue) => {
+      //   updateFun && updateFun(node, this.getVmValue(vm, arguments[1]))
+      // })
       return this.getVmValue(vm, arguments[1])
     })
     updateFun && updateFun(node, value)
   },
+
+  // v-model绑定的元素处理
   model (node, vm, expr) {
     let updateFun = this.update['modelUpdate']
+
+    // 添加观察者, 数据变化时 调用watch的cb
+    new Watcher(vm, expr, (newValue, oldValue) => {
+      updateFun && updateFun(node, this.getVmValue(vm, expr))
+    })
+
+    node.addEventListener('input', (e) => {
+      let newValue = e.target.value
+      this.setVmValue(vm, expr, newValue)
+    })
+
     updateFun && updateFun(node, this.getVmValue(vm, expr))
+  },
+
+  setVmValue (vm, expr, value) {
+    let exprs = expr.split('.')
+    console.log(exprs)
+    return exprs.reduce((prev, next, currentIndex) => {
+      if (currentIndex === expr.length - 1) {
+        return prev[next] = value
+      }
+      return prev[next]
+    }, vm.$data)
   },
   update: {
     // 文本更新

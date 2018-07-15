@@ -10,24 +10,29 @@
     <input type="text" v-model="user.name" />
     <div>
       <span>姓名: </span>
-      <span>{{user.name}}--{{msg}}</span>
+      <span>{{user.name}}--{{user.job.name}}</span>
     </div>
     <div>
       <span>响应的数据:{{msg}}</span>
     </div>
   </div>
 
+  <script src="./watcher.js"></script>
+  <script src="./observer.js"></script>
   <script src="./compile.js"></script>
   <script src="./Vue.js"></script>
 
   <script>
-  new Vue ({
+  let vm = new Vue ({
     el: '#app',
     data: {
       user: {
-        name: 'lybenson'
+        name: 'lybenson',
+        job: {
+          name: 'development'
+        }
       },
-      msg: 'msged'
+      msg: 'message'
     }
   })
   </script>
